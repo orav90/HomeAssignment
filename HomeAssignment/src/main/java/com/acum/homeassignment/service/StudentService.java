@@ -25,7 +25,7 @@ public class StudentService {
         return StudentMapper.INSTANCE.studentToStudentDetailsDTO(student);
     }
 
-    public Student studentDetailsDtoToStudent(StudentDetailsDTO student){
+    public Student studentDetailsDtoToStudent(StudentDetailsDTO student) {
         return StudentMapper.INSTANCE.studentDetailsDtoToStudent(student);
     }
 
@@ -93,27 +93,29 @@ public class StudentService {
                 .orElseThrow(() -> new RuntimeException("Student not found"));
     }
 
-    private Course courseValidation(Long id) {
-        return courseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-    }
+    private Course courseValidation(Long id, Long studentId) {
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
 
+        if (course.getStudents().stream().anyMatch(e -> Objects.equals(e.getId(), studentId))) {
+            throw new RuntimeException("Student is already enrolled to this course");
+        }
+
+        if (course.getStudents().size() == course.getMaxNumberOfStudents()) {
+            throw new RuntimeException("Course is full");
+        }
+
+        return course;
+    }
 
     @Transactional
     public void enroll(Long studentId, Long courseId) {
         Student s = studentValidation(studentId);
-        Course c = courseValidation(courseId);
-
-        if(c.getStudents().stream().anyMatch(e -> Objects.equals(e.getId(), studentId))){
-            throw new RuntimeException("Student is already enrolled to this course");
-        }
-
-        if(c.getStudents().size() == c.getMaxNumberOfStudents()){
-            throw new RuntimeException("Course is full");
-        }
+        Course c = courseValidation(courseId, studentId);
 
         s.getCourses().add(c);
         c.getStudents().add(s);
         studentRepository.save(s);
     }
 }
+
