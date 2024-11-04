@@ -115,7 +115,5 @@ public class StudentService {
         s.getCourses().add(c);
         c.getStudents().add(s);
         studentRepository.save(s);
-        courseRepository.save(c);
-
     }
 }
